@@ -1,27 +1,26 @@
-// src/utils/analytics.ts (or src/analytics/interactions.ts)
-
 function processInteraction(element: HTMLElement, actionType: string) {
   const trackingName = element.getAttribute("data-tracking-name");
   const trackingType = element.getAttribute("data-tracking-type") || element.tagName.toLowerCase();
   
-  // Find the closest parent element (or self) that has the data-tracking-group attribute
   const groupElement = element.closest("[data-tracking-group]");
   const trackingGroup = groupElement ? groupElement.getAttribute("data-tracking-group")?.trim() : null;
-  
-  // Safely fallback to the DOM-derived trackingGroup if window.__pageId lags behind
   const pageName = trackingGroup || (window as any).__pageId;
   
-  let elementValue: any = (element as HTMLInputElement | HTMLSelectElement).value;
+  const inputElement = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+  let elementValue: any = inputElement.value;
 
-  // Special handling for checkboxes and radio buttons
-  if ((element as HTMLInputElement).type === "checkbox") {
-    elementValue = (element as HTMLInputElement).checked;
-  } else if (element.tagName.toLowerCase() === "select") {
-    const selectElement = element as HTMLSelectElement;
+  if (inputElement.type === "checkbox") {
+    elementValue = (inputElement as HTMLInputElement).checked;
+  } else if (inputElement.tagName.toLowerCase() === "select") {
+    const selectElement = inputElement as HTMLSelectElement;
     elementValue = selectElement.options[selectElement.selectedIndex]?.text;
+  } else if (inputElement.type === "password") {
+    elementValue = "[REDACTED]";
   }
 
-  // Build the element object dynamically, omitting null, undefined, or empty string values
+  // Extract element URL: check data-tracking-url first, then fallback to href
+  const elementUrl = element.getAttribute("data-tracking-url") || element.getAttribute("href");
+
   const elementData: Record<string, any> = {
     name: trackingName,
     type: trackingType
@@ -31,33 +30,43 @@ function processInteraction(element: HTMLElement, actionType: string) {
     elementData.group = trackingGroup;
   }
 
-  // Check if value is valid (not null, undefined, or empty string)
   if (elementValue !== null && elementValue !== undefined && elementValue !== "") {
     elementData.value = elementValue;
   }
 
+  // Add elementUrl if present
+  if (elementUrl) {
+    elementData.url = elementUrl;
+  }
+
   const dataLayerPayload = {
     event: actionType,
-    pageName: pageName, // Uses the guaranteed current page context
+    pageName: pageName,
     element: elementData
   };
 
   console.log("Adobe Analytics Payload:", dataLayerPayload);
 
-  // Extend window object type safety if needed, or fallback safely
   (window as any).dataLayer = (window as any).dataLayer || [];
   (window as any).dataLayer.push(dataLayerPayload);
 }
 
 export function initGlobalTracking(): () => void {
   const handleClick = (event: MouseEvent) => {
-    const target = (event.target as HTMLElement)?.closest("[data-tracking-name]") as HTMLElement;
+    // Safely check if event.target is an Element
+    if (!(event.target instanceof Element)) return;
+    const target = event.target.closest("[data-tracking-name]") as HTMLElement;
     if (!target) return;
 
-    // Ignore click events for radio buttons and select dropdowns so they only fire on 'change'
+    const inputType = (target as HTMLInputElement).type;
+    const tagName = target.tagName.toLowerCase();
+
     if (
-      (target as HTMLInputElement).type === "radio" ||
-      target.tagName.toLowerCase() === "select"
+      inputType === "radio" ||
+      inputType === "checkbox" ||
+      tagName === "select" ||
+      tagName === "input" ||
+      tagName === "textarea"
     ) {
       return;
     }
@@ -66,18 +75,38 @@ export function initGlobalTracking(): () => void {
   };
 
   const handleChange = (event: Event) => {
-    const target = (event.target as HTMLElement)?.closest("[data-tracking-name]") as HTMLElement;
+    if (!(event.target instanceof Element)) return;
+    const target = event.target.closest("[data-tracking-name]") as HTMLElement;
     if (!target) return;
-    processInteraction(target, "change");
+
+    const inputType = (target as HTMLInputElement).type;
+    
+    if (inputType === "checkbox" || target.tagName.toLowerCase() === "select" || inputType === "radio") {
+      processInteraction(target, "change");
+    }
   };
 
-  // Attach listeners with capture phase to intercept the click before state changes flush
+  const handleBlur = (event: Event) => {
+    // FIX: Guard against non-element targets (like window or document) during blur
+    if (!(event.target instanceof Element)) return;
+    const target = event.target.closest("[data-tracking-name]") as HTMLElement;
+    if (!target) return;
+
+    const tagName = target.tagName.toLowerCase();
+    const inputType = (target as HTMLInputElement).type;
+
+    if (tagName === "textarea" || (tagName === "input" && inputType !== "checkbox" && inputType !== "radio" && inputType !== "submit" && inputType !== "button")) {
+      processInteraction(target, "blur");
+    }
+  };
+
   window.addEventListener("click", handleClick as EventListener, { capture: true });
   window.addEventListener("change", handleChange as EventListener, { capture: true });
+  window.addEventListener("blur", handleBlur as EventListener, { capture: true });
 
-  // Return a cleanup function to remove the exact same listeners
   return () => {
     window.removeEventListener("click", handleClick as EventListener, { capture: true });
     window.removeEventListener("change", handleChange as EventListener, { capture: true });
+    window.removeEventListener("blur", handleBlur as EventListener, { capture: true });
   };
 }

@@ -5,6 +5,8 @@ interface FormFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   hint?: string
   error?: string
   children?: ReactNode
+  trackingName?: string
+  trackingType?: string
 }
 
 export function FormField({
@@ -14,9 +16,17 @@ export function FormField({
   id,
   className = '',
   children,
+  trackingName,
+  trackingType="input",
   ...inputProps
 }: FormFieldProps) {
   const fieldId = id ?? inputProps.name
+
+  // Build data attributes dynamically if tracking props are provided
+  const trackingAttributes = {
+    ...(trackingName ? { 'data-tracking-name': trackingName } : {}),
+    ...(trackingType ? { 'data-tracking-type': trackingType } : {}),
+  }
 
   return (
     <div className="space-y-1.5">
@@ -30,6 +40,7 @@ export function FormField({
         <input
           id={fieldId}
           className={`w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 shadow-sm placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${error ? 'border-red-500' : ''} ${className}`}
+          {...trackingAttributes}
           {...inputProps}
         />
       )}
@@ -48,6 +59,8 @@ interface SelectFieldProps
   options: { value: string; label: string }[]
   trackingName?: string
   trackingType?: string
+  trackingUrl?: string
+  trackingGroup?: string
 }
 
 export function SelectField({
@@ -58,9 +71,18 @@ export function SelectField({
   className = '',
   trackingName,
   trackingType = "select",
+  trackingUrl,
+  trackingGroup,
   ...selectProps
 }: SelectFieldProps) {
   const fieldId = id ?? selectProps.name
+
+  const trackingAttributes = {
+    ...(trackingName ? { 'data-tracking-name': trackingName } : {}),
+    ...(trackingType ? { 'data-tracking-type': trackingType } : {}),
+    ...(trackingUrl ? { 'data-tracking-url': trackingUrl } : {}),
+    ...(trackingGroup ? { 'data-tracking-group': trackingGroup } : {}),
+  }
 
   return (
     <div className="space-y-1.5">
@@ -73,8 +95,7 @@ export function SelectField({
       <select
         id={fieldId}
         className={`w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 ${className}`}
-        {...(trackingName ? { 'data-tracking-name': trackingName } : {})}
-        {...(trackingType ? { 'data-tracking-type': trackingType } : {})}
+        {...trackingAttributes}
         {...selectProps}
       >
         {options.map((opt) => (

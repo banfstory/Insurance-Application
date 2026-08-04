@@ -62,6 +62,7 @@ export function StepVehicle() {
         {vehicle.identificationMode === 'registration' ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <FormField
+              trackingName="registration"
               label="Registration number"
               name="registration"
               placeholder="e.g. ABC123"
@@ -74,6 +75,7 @@ export function StepVehicle() {
               hint="As shown on your number plate"
             />
             <FormField
+              trackingName="vin"
               label="VIN (optional)"
               name="vin"
               placeholder="17-character VIN"
@@ -87,7 +89,7 @@ export function StepVehicle() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
             <SelectField
-              data-tracking-name="make"
+              trackingName="make"
               label="Make"
               name="make"
               value={vehicle.make}
@@ -103,7 +105,7 @@ export function StepVehicle() {
               ]}
             />
             <SelectField
-              data-tracking-name="model"
+              trackingName="model"
               label="Model"
               name="model"
               value={vehicle.model}
@@ -115,7 +117,7 @@ export function StepVehicle() {
               ]}
             />
             <SelectField
-              data-tracking-name="year"
+              trackingName="year"
               label="Year"
               name="year"
               value={vehicle.year}
@@ -129,6 +131,7 @@ export function StepVehicle() {
         )}
 
         <RadioGroup
+          trackingName="finance=status"
           name="financeStatus"
           legend="Is the vehicle financed or leased?"
           value={vehicle.financeStatus}
@@ -142,6 +145,7 @@ export function StepVehicle() {
         />
 
         <SelectField
+          trackingName="current-insurance"
           label="Current car insurance"
           name="currentInsurance"
           value={vehicle.currentInsurance}

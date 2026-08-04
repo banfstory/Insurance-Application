@@ -43,6 +43,7 @@ export function StepPolicyStart() {
     >
       <div className="space-y-6">
         <FormField
+          trackingName="policy-start-date"
           label="Policy start date"
           name="policyStartDate"
           type="date"
@@ -57,6 +58,7 @@ export function StepPolicyStart() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
+            trackingName="first-name"
             label="First name"
             name="firstName"
             autoComplete="given-name"
@@ -66,6 +68,7 @@ export function StepPolicyStart() {
             }
           />
           <FormField
+            trackingName="last-name"
             label="Last name"
             name="lastName"
             autoComplete="family-name"
@@ -78,6 +81,7 @@ export function StepPolicyStart() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
+            trackingName="email"
             label="Email"
             name="email"
             type="email"
@@ -86,6 +90,7 @@ export function StepPolicyStart() {
             onChange={(e) => updateSection('buy', { email: e.target.value })}
           />
           <FormField
+            trackingName="phone"
             label="Mobile"
             name="phone"
             type="tel"

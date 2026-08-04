@@ -49,6 +49,7 @@ export function StepCover() {
 
         {cover.coverType === 'comprehensive' && (
           <RadioGroup<ValuationType>
+            trackingName="valuation"
             name="valuation"
             legend="Sum insured"
             value={cover.valuation}
@@ -72,6 +73,7 @@ export function StepCover() {
         {cover.coverType === 'comprehensive' &&
           cover.valuation === 'agreed' && (
             <FormField
+              trackingName="agreed-value"
               label="Agreed value (AUD)"
               name="agreedValue"
               type="number"
@@ -117,6 +119,8 @@ export function StepCover() {
                 className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-200 px-4 py-3 hover:bg-slate-50"
               >
                 <input
+                  data-tracking-name={key}
+                  data-tracking-type="checkbox"
                   type="checkbox"
                   checked={cover.addOns[key]}
                   onChange={() => toggleAddOn(key)}

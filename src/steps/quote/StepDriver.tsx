@@ -30,6 +30,7 @@ export function StepDriver() {
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
+            trackingName="age"
             label="Driver age"
             name="age"
             type="number"
@@ -40,6 +41,7 @@ export function StepDriver() {
             onChange={(e) => updateSection('driver', { age: e.target.value })}
           />
           <FormField
+            trackingName="years-licensed"
             label="Years holding a full licence"
             name="yearsLicensed"
             type="number"

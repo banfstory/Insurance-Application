@@ -37,6 +37,7 @@ export function StepUsage() {
       <div className="space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
+            trackingName="suburb"
             label="Suburb (usually parked)"
             name="suburb"
             placeholder="e.g. Parramatta"
@@ -88,6 +89,7 @@ export function StepUsage() {
         />
 
         <FormField
+          trackingName="annual-km"
           label="Estimated kilometres per year"
           name="annualKm"
           type="number"

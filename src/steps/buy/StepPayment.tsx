@@ -33,10 +33,10 @@ export function StepPayment() {
       subtitle="Enter test card details — this step simulates checkout only."
       footer={
         <>
-          <Button variant="secondary" onClick={goBack}>
+          <Button trackingName="back" variant="secondary" onClick={goBack}>
             Back
           </Button>
-          <Button onClick={handlePay} disabled={processing}>
+          <Button trackingName="pay" onClick={handlePay} disabled={processing}>
             {processing ? 'Processing…' : `Pay ${formatAud(quote.annualTotal)}`}
           </Button>
         </>
@@ -44,6 +44,7 @@ export function StepPayment() {
     >
       <div className="space-y-4">
         <FormField
+          trackingName="card-name"
           label="Name on card"
           name="cardName"
           autoComplete="cc-name"
@@ -53,6 +54,7 @@ export function StepPayment() {
           }
         />
         <FormField
+          trackingName="card-number"
           label="Card number"
           name="cardNumber"
           inputMode="numeric"
@@ -67,6 +69,7 @@ export function StepPayment() {
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <FormField
+            trackingName="expiry"
             label="Expiry (MM/YY)"
             name="expiry"
             placeholder="12/28"
@@ -77,6 +80,7 @@ export function StepPayment() {
             }
           />
           <FormField
+            trackingName="cvv"
             label="CVV"
             name="cvv"
             type="password"
