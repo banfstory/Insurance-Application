@@ -131,7 +131,7 @@ export function StepVehicle() {
         )}
 
         <RadioGroup
-          trackingName="finance=status"
+          trackingName="finance-status"
           name="financeStatus"
           legend="Is the vehicle financed or leased?"
           value={vehicle.financeStatus}
