@@ -4,21 +4,38 @@ function processInteraction(element: HTMLElement, actionType: string) {
   
   const groupElement = element.closest("[data-tracking-group]");
   const trackingGroup = groupElement ? groupElement.getAttribute("data-tracking-group")?.trim() : null;
+
+  const subGroupElement = element.closest("[data-tracking-subgroup]");
+  const trackingSubGroup = subGroupElement ? subGroupElement.getAttribute("data-tracking-subgroup")?.trim() : null;
+  
   const pageName = trackingGroup || (window as any).__pageId;
   
-  const inputElement = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-  let elementValue: any = inputElement.value;
+  let elementValue: string | boolean | undefined = undefined;
+  const tagName = element.tagName.toLowerCase();
 
-  if (inputElement.type === "checkbox") {
-    elementValue = (inputElement as HTMLInputElement).checked;
-  } else if (inputElement.tagName.toLowerCase() === "select") {
-    const selectElement = inputElement as HTMLSelectElement;
-    elementValue = selectElement.options[selectElement.selectedIndex]?.text;
-  } else if (inputElement.type === "password") {
-    elementValue = "[REDACTED]";
+  if (tagName === "input") {
+    const inputEl = element as HTMLInputElement;
+    const inputType = inputEl.type.toLowerCase();
+
+    if (inputType === "checkbox") {
+      elementValue = inputEl.checked;
+    } else if (inputType === "radio") {
+      elementValue = inputEl.value;
+    } else if (inputType === "password") {
+      elementValue = "[REDACTED]";
+    } else if (inputType !== "submit" && inputType !== "button") {
+      const canCaptureValue = element.getAttribute("data-capture-value") === "true";
+      elementValue = canCaptureValue && inputEl.value ? inputEl.value : (inputEl.value ? "[HAS_VALUE]" : "[EMPTY]");
+    }
+  } else if (tagName === "select") {
+    const selectEl = element as HTMLSelectElement;
+    elementValue = selectEl.options[selectEl.selectedIndex]?.text;
+  } else if (tagName === "textarea") {
+    const canCaptureValue = element.getAttribute("data-capture-value") === "true";
+    const textareaEl = element as HTMLTextAreaElement;
+    elementValue = canCaptureValue && textareaEl.value ? textareaEl.value : (textareaEl.value ? "[HAS_VALUE]" : "[EMPTY]");
   }
 
-  // Extract element URL: check data-tracking-url first, then fallback to href
   const elementUrl = element.getAttribute("data-tracking-url") || element.getAttribute("href");
 
   const elementData: Record<string, any> = {
@@ -26,21 +43,25 @@ function processInteraction(element: HTMLElement, actionType: string) {
     type: trackingType
   };
 
+  // UPDATED LOGIC: Only set subgroup if trackingGroup exists
   if (trackingGroup) {
     elementData.group = trackingGroup;
+    
+    if (trackingSubGroup) {
+      elementData.subGroup = trackingSubGroup;
+    }
   }
 
   if (elementValue !== null && elementValue !== undefined && elementValue !== "") {
     elementData.value = elementValue;
   }
 
-  // Add elementUrl if present
   if (elementUrl) {
     elementData.url = elementUrl;
   }
 
   const dataLayerPayload = {
-    event: actionType,
+    event: actionType, 
     pageName: pageName,
     element: elementData
   };
@@ -53,13 +74,12 @@ function processInteraction(element: HTMLElement, actionType: string) {
 
 export function initGlobalTracking(): () => void {
   const handleClick = (event: MouseEvent) => {
-    // Safely check if event.target is an Element
     if (!(event.target instanceof Element)) return;
     const target = event.target.closest("[data-tracking-name]") as HTMLElement;
     if (!target) return;
 
-    const inputType = (target as HTMLInputElement).type;
     const tagName = target.tagName.toLowerCase();
+    const inputType = (target as HTMLInputElement).type;
 
     if (
       inputType === "radio" ||
@@ -79,15 +99,15 @@ export function initGlobalTracking(): () => void {
     const target = event.target.closest("[data-tracking-name]") as HTMLElement;
     if (!target) return;
 
+    const tagName = target.tagName.toLowerCase();
     const inputType = (target as HTMLInputElement).type;
     
-    if (inputType === "checkbox" || target.tagName.toLowerCase() === "select" || inputType === "radio") {
+    if (inputType === "checkbox" || tagName === "select" || inputType === "radio") {
       processInteraction(target, "change");
     }
   };
 
   const handleBlur = (event: Event) => {
-    // FIX: Guard against non-element targets (like window or document) during blur
     if (!(event.target instanceof Element)) return;
     const target = event.target.closest("[data-tracking-name]") as HTMLElement;
     if (!target) return;
